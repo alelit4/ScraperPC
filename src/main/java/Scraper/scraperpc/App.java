@@ -76,29 +76,36 @@ public class App {
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 0);
 		int count = 0;
+		System.out.println("\n 111111111111111111111111111111111111 \n");
 		// borrando vacios  <---------------------
+//		for(Element e : block){
+//			System.out.print(" => " + e.text());
+//			if(e.text().toString().matches("") || e.toString().matches("<td></td>")){
+//				System.out.print(" Vaciooo1!! " + e.siblingIndex());
+////				block.remove(e.siblingIndex());
+//			} 
+//		}
+		System.out.println("\n 22222222222222222222222222222222222 \n");
 		for(Element e : block){
-			System.out.println(" => " + e.text());
+			System.out.print(" => " + e.text()); // <---------------------
 			if(e.text().toString().matches("") || e.toString().matches("<td></td>")){
-				System.out.println(" Vaciooo!! " + e.siblingIndex());
+				System.out.print(" Vaciooo2!! " + e.siblingIndex());
 //				block.remove(e.siblingIndex());
-			} 
-		}
-		for(Element e : block){
-			System.out.println(" => " + e.text()); // <---------------------
+			} else
 			if(e.text().matches(".*[0-9]*\\/[0-9]*\\/[0-9]*.*")){
-				System.out.println("Es una fechaa!!! hoy es => " + today.getTime());
+//				System.out.println("Es una fechaa!!! hoy es => " + today.getTime());
 				count++;
 				String allDate = e.text().replaceAll("[a-zA-Zá]", "");
 				String[] onlyDate = allDate.split("/");
-				System.out.println("en alldate => " + allDate);
-				System.out.println("en onlydDate => " + onlyDate[2].toString());
+//				System.out.println("en alldate => " + allDate);
+//				System.out.println("en onlydDate => " + onlyDate[2].toString());
 				onlyDate[0].concat("20");
 				Date luchaDate = new Date( Integer.parseInt( onlyDate[2]), Integer.parseInt( onlyDate[1]), Integer.parseInt( "2013"));
 				if(luchaDate.before(today.getTime())){
 					System.out.println("Esta es la jornada pasadaaaa!!! " + count);
 					e = block.last();
 				}
+				System.out.println("\n");
 			}
 		}
 	}
