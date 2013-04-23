@@ -13,6 +13,7 @@ import java.sql.*;
 
 import org.sqlite.*;
 
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -39,12 +40,67 @@ public class App {
 	public static void main(String[] args) throws IOException, SQLException,
 			ClassNotFoundException {
 		// 1TF
-		GetDatosLigaTenerife(new URL(
-				"http://origencanario.com/primera-categoria-2/"));
+//		GetDatosLigaTenerife(new URL("http://origencanario.com/primera-categoria-2/"));
 		// 3TF
-		GetDatosLigaTenerife(new URL(
-				"http://origencanario.com/tercera-categoria-2012/"));
+//		GetDatosLigaTenerife(new URL("http://origencanario.com/tercera-categoria-2012/"));
+		// GrupoA
+		getDatosInterInsuLZFV(new URL("http://tibiabin.es/2013/02/calendario-liga-interinsular-lucha-canaria/"), "A");
+		// GrupoB
+//		getDatosInterInsuLZFV(new URL("http://tibiabin.es/2013/02/calendario-liga-interinsular-lucha-canaria/"), "B");
+		// Final
+//		getDatosInterInsuLZFV(new URL("http://tibiabin.es/2013/02/calendario-liga-interinsular-lucha-canaria/"), "F");
+				
+	}
 
+	private static void getDatosInterInsuLZFV(URL url, String grupo) throws IOException {
+		Document doc = Jsoup.connect(url.toString()).timeout(0).get();
+		Elements tables = doc.select("table");
+		if (grupo.matches("A")){
+			Element table = tables.get(0);
+			System.out.println("table 1" + table.text());
+			updateGrupo(table, grupo);
+		}else if (grupo.matches("B")){
+			Element table = tables.get(1);
+			System.out.println("table 2" + table.text());
+			updateGrupo(table, grupo);
+		}else if (grupo.matches("F")){
+			Element table = tables.get(2);
+			System.out.println("table 3" + table.text());
+			updateGrupo(table, grupo);
+		}
+		
+	}
+
+	private static void updateGrupo(Element table, String grupo) {
+		Elements block = table.select("td");
+		Calendar today = Calendar.getInstance();
+		today.set(Calendar.HOUR_OF_DAY, 0);
+		int count = 0;
+		// borrando vacios  <---------------------
+		for(Element e : block){
+			System.out.println(" => " + e.text());
+			if(e.text().toString().matches("") || e.toString().matches("<td></td>")){
+				System.out.println(" Vaciooo!! " + e.siblingIndex());
+//				block.remove(e.siblingIndex());
+			} 
+		}
+		for(Element e : block){
+			System.out.println(" => " + e.text()); // <---------------------
+			if(e.text().matches(".*[0-9]*\\/[0-9]*\\/[0-9]*.*")){
+				System.out.println("Es una fechaa!!! hoy es => " + today.getTime());
+				count++;
+				String allDate = e.text().replaceAll("[a-zA-Zá]", "");
+				String[] onlyDate = allDate.split("/");
+				System.out.println("en alldate => " + allDate);
+				System.out.println("en onlydDate => " + onlyDate[2].toString());
+				onlyDate[0].concat("20");
+				Date luchaDate = new Date( Integer.parseInt( onlyDate[2]), Integer.parseInt( onlyDate[1]), Integer.parseInt( "2013"));
+				if(luchaDate.before(today.getTime())){
+					System.out.println("Esta es la jornada pasadaaaa!!! " + count);
+					e = block.last();
+				}
+			}
+		}
 	}
 
 	private static void GetDatosLigaTenerife(URL url) throws IOException,
