@@ -34,7 +34,7 @@ import javax.xml.crypto.Data;
  * 
  */
 public class App {
-	private static final int NUMLUCHASTF1 = 4;
+	private static final int NUMLUCHASTF1 = 6;
 	private static final int NUMDATOSTF = 4;
 	private static final int NUMLUCHASTF3 = 6;
 
@@ -43,7 +43,7 @@ public class App {
 		// 1TF
 		GetDatosLigaTenerife(new URL("http://origencanario.com/primera-categoria-2/"));
 		// 3TF
-		GetDatosLigaTenerife(new URL("http://origencanario.com/tercera-categoria-2012/"));
+//		GetDatosLigaTenerife(new URL("http://origencanario.com/tercera-categoria-2012/"));
 		// GrupoA
 //		getDatosInterInsuLZFV(new URL("http://tibiabin.es/2013/02/calendario-liga-interinsular-lucha-canaria/"), "A");
 		// GrupoB
@@ -132,12 +132,12 @@ public class App {
 		System.out.println("Categoria = " + getCategoria(doc.title()));
 		Elements allLuchas = doc.getElementsByTag("td");
 		int numluchas;
-		if (getCategoria(doc.title()).matches("1")){
+		if (getCategoria(doc.title()).matches("Primera")){
 			numluchas = NUMLUCHASTF1;
 		} else{
 			numluchas = NUMLUCHASTF3;
 		}
-		for (int i = 0; i < (numluchas * NUMDATOSTF); i = i + 4) {
+		for (int i = 0; i < (numluchas * NUMDATOSTF); i = i + NUMDATOSTF) {
 			showInfo(allLuchas, i);
 			System.out.println("\nLucha => " + allLuchas.get(i).text() + " - "
 					+ allLuchas.get(i + 1).text());
@@ -145,16 +145,22 @@ public class App {
 			String id = getID(allLuchas.get(i).text(),
 					getCategoria(doc.title()), getJornada(doc.select("p")
 							.first()));
-			updateLucha(id, getResultado(allLuchas.get(i + 3).text()));
+			String resultado = getResultado(allLuchas.get(i + 3).text());
+			System.out.println("resultado = " + resultado);
+			updateLucha(id, resultado);
 
 		}
 
 	}
 
 	private static String getResultado(String text) {
+		
 		if (text.matches(".*Aplazado.*")) {
 			System.out.println("oooooohh Aplazadoo");
 			return "0-0";
+		}
+		if(!text.matches("[0-9]*-[0-9]*")){
+			return "0-0"; 
 		}
 		return text;
 	}
@@ -164,12 +170,14 @@ public class App {
 		try {
 			Class.forName("org.sqlite.JDBC");
 			java.sql.Connection conn = DriverManager
-					.getConnection("jdbc:sqlite:production.sqlite3");
+					.getConnection("jdbc:sqlite:production.sqlite");
 			Statement stat = conn.createStatement();
 			// if every thing is OK rs should be 0
-			int rs = stat.executeUpdate("UPDATE CALENDARIOS  SET Resultado = "
-					+ resultado + " WHERE id=" + id + " ");
+			int rs = stat.executeUpdate("UPDATE CALENDARIOS  SET Resultado = '"
+					+ resultado + "' WHERE id='" + id + "' ");
+			
 			conn.close();
+			stat.close();
 			return true;
 
 		} catch (ClassNotFoundException e) {
@@ -215,7 +223,7 @@ public class App {
 		// Consulta a la bd
 		Class.forName("org.sqlite.JDBC");
 		java.sql.Connection conn = DriverManager
-				.getConnection("jdbc:sqlite:production.sqlite3");
+				.getConnection("jdbc:sqlite:production.sqlite");
 		Statement stat = conn.createStatement();
 		if (casa.matches(".*UNIVERSIDAD-TIJARAFE.*")) {
 			System.out
@@ -236,9 +244,12 @@ public class App {
 
 		while (rs.next()) {
 			System.out.println("ID => " + rs.getString("id"));
+			String salida = rs.getString("id");
+			stat.close();
 			conn.close();
-			return rs.getString("id");
+			return salida;
 		}
+		stat.close();
 		conn.close();
 		return null;
 
