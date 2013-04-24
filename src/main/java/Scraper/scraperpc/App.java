@@ -34,17 +34,18 @@ import javax.xml.crypto.Data;
  * 
  */
 public class App {
-	private static final int NUMLUCHASTF = 4;
+	private static final int NUMLUCHASTF1 = 4;
 	private static final int NUMDATOSTF = 4;
+	private static final int NUMLUCHASTF3 = 6;
 
 	public static void main(String[] args) throws IOException, SQLException,
 			ClassNotFoundException {
 		// 1TF
-//		GetDatosLigaTenerife(new URL("http://origencanario.com/primera-categoria-2/"));
+		GetDatosLigaTenerife(new URL("http://origencanario.com/primera-categoria-2/"));
 		// 3TF
-//		GetDatosLigaTenerife(new URL("http://origencanario.com/tercera-categoria-2012/"));
+		GetDatosLigaTenerife(new URL("http://origencanario.com/tercera-categoria-2012/"));
 		// GrupoA
-		getDatosInterInsuLZFV(new URL("http://tibiabin.es/2013/02/calendario-liga-interinsular-lucha-canaria/"), "A");
+//		getDatosInterInsuLZFV(new URL("http://tibiabin.es/2013/02/calendario-liga-interinsular-lucha-canaria/"), "A");
 		// GrupoB
 //		getDatosInterInsuLZFV(new URL("http://tibiabin.es/2013/02/calendario-liga-interinsular-lucha-canaria/"), "B");
 		// Final
@@ -72,42 +73,56 @@ public class App {
 	}
 
 	private static void updateGrupo(Element table, String grupo) {
-		Elements block = table.select("td");
+		Elements allBlocks = table.select("td");
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 0);
 		int count = 0;
-		System.out.println("\n 111111111111111111111111111111111111 \n");
-		// borrando vacios  <---------------------
-//		for(Element e : block){
-//			System.out.print(" => " + e.text());
-//			if(e.text().toString().matches("") || e.toString().matches("<td></td>")){
-//				System.out.print(" Vaciooo1!! " + e.siblingIndex());
-////				block.remove(e.siblingIndex());
-//			} 
-//		}
-		System.out.println("\n 22222222222222222222222222222222222 \n");
-		for(Element e : block){
-			System.out.print(" => " + e.text()); // <---------------------
-			if(e.text().toString().matches("") || e.toString().matches("<td></td>")){
-				System.out.print(" Vaciooo2!! " + e.siblingIndex());
-//				block.remove(e.siblingIndex());
-			} else
-			if(e.text().matches(".*[0-9]*\\/[0-9]*\\/[0-9]*.*")){
-//				System.out.println("Es una fechaa!!! hoy es => " + today.getTime());
-				count++;
-				String allDate = e.text().replaceAll("[a-zA-Zá]", "");
-				String[] onlyDate = allDate.split("/");
-//				System.out.println("en alldate => " + allDate);
-//				System.out.println("en onlydDate => " + onlyDate[2].toString());
-				onlyDate[0].concat("20");
-				Date luchaDate = new Date( Integer.parseInt( onlyDate[2]), Integer.parseInt( onlyDate[1]), Integer.parseInt( "2013"));
-				if(luchaDate.before(today.getTime())){
-					System.out.println("Esta es la jornada pasadaaaa!!! " + count);
-					e = block.last();
-				}
-				System.out.println("\n");
+		int i = 0;
+		String ultimaJornada = "1";
+		for(Element e : allBlocks){
+//			System.out.print(" => " + e.text()); // <---------------------
+			if(e.text().toString().matches(".*Jornada.*")){
+				ultimaJornada = e.text().toString();
+//				System.out.println("última Jornada");
+				i++;
 			}
 		}
+		String line = "";
+		String[] allBlocksArray = new String[i+1];
+		i = 0;
+		for(Element e : allBlocks){
+//			System.out.print(" B=> " + e.text()); // <---------------------
+			if(e.text().toString().matches(".*Jornada.*")){
+				count = 0;
+				i++;
+			}
+			if(!(e.text().toString().matches("") || e.toString().matches("<td></td>"))){
+				line = allBlocksArray[i];
+				allBlocksArray[i] = line + ";"+ e.text().toString();
+				count++;
+			}
+			
+		}
+		int jornadaActual = GetJornadaActual(allBlocksArray);
+		
+	}
+
+	private static int GetJornadaActual(String[] allBlocksArray) {
+		int jornadaInt;
+		String jornadaActual = "0";
+		int i;
+		for( i = 0 ; i < allBlocksArray.length; i++){
+			if (allBlocksArray[i].split(";").length == 20){
+				String[] line2 = allBlocksArray[i].split(";");
+				jornadaActual = line2[1].toString();
+			}
+			
+		}
+//		System.out.println("jornada actual = " + jornadaActual);
+		String[] datos = jornadaActual.split(" ");
+		return Integer.parseInt(datos[1]);
+		
+		
 	}
 
 	private static void GetDatosLigaTenerife(URL url) throws IOException,
@@ -116,7 +131,13 @@ public class App {
 		System.out.println("\n Origen Canario => " + doc.title());
 		System.out.println("Categoria = " + getCategoria(doc.title()));
 		Elements allLuchas = doc.getElementsByTag("td");
-		for (int i = 0; i < (NUMLUCHASTF * NUMDATOSTF); i = i + 4) {
+		int numluchas;
+		if (getCategoria(doc.title()).matches("1")){
+			numluchas = NUMLUCHASTF1;
+		} else{
+			numluchas = NUMLUCHASTF3;
+		}
+		for (int i = 0; i < (numluchas * NUMDATOSTF); i = i + 4) {
 			showInfo(allLuchas, i);
 			System.out.println("\nLucha => " + allLuchas.get(i).text() + " - "
 					+ allLuchas.get(i + 1).text());
@@ -124,7 +145,7 @@ public class App {
 			String id = getID(allLuchas.get(i).text(),
 					getCategoria(doc.title()), getJornada(doc.select("p")
 							.first()));
-			updateLucha(id, getResultado(allLuchas.get(i + 2).text()));
+			updateLucha(id, getResultado(allLuchas.get(i + 3).text()));
 
 		}
 
