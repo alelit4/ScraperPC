@@ -1,4 +1,4 @@
-package Scraper.scraperpc;
+package com.puntalcanario.scraper.tenerife;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,152 +33,25 @@ import javax.xml.crypto.Data;
  * PC Scraper
  * 
  */
-public class App {
+
+public class ScraperTF1 {
+
 	private static final int NUMLUCHASTF1 = 6;
 	private static final int NUMDATOSTF = 4;
 	private static final int NUMLUCHASTF3 = 6;
-	private static final String ISLA = "InterinsularLF";
-	private static final String CATEGORIA = "2";
-	private static final String COMPETICION = "InterinsularLF";
 
 	public static void main(String[] args) throws IOException, SQLException,
 			ClassNotFoundException {
-		System.out.println("Jornada Actual = " + getJornada(ISLA, CATEGORIA, COMPETICION));
-		updateJornada();
-		System.out.println("Jornada Actual = " + getJornada(ISLA, CATEGORIA, COMPETICION));
-	}
-
-	private static int getJornada(String isla, String categoria, String competicion)
-			throws ClassNotFoundException, SQLException {
-		// Consulta a la bd
-		Class.forName("org.sqlite.JDBC");
-		java.sql.Connection conn = DriverManager
-				.getConnection("jdbc:sqlite:production.sqlite");
-		Statement stat = conn.createStatement();
-		ResultSet rs = stat
-				.executeQuery("SELECT jornada FROM 	JORNADA_ACTUALS WHERE ( Isla LIKE '%"
-						+ isla
-						+ "%' AND Categoria LIKE '"
-						+ categoria
-						+ "' AND Competicion LIKE '%" + competicion + "%')");
-
-		while (rs.next()) {
-			System.out.println("JORNADA => " + rs.getString("jornada"));
-			int salida = Integer.parseInt(rs.getString("jornada"));
-			stat.close();
-			conn.close();
-			return salida;
-		}
-		stat.close();
-		conn.close();
-		return 0;
-
-	}
-	// .executeQuery("SELECT jornada FROM 	JORNADA_ACTUALS WHERE ( Isla LIKE '%"
-	// + isla
-	// + "%' AND Categoria LIKE '"
-	// + categoria
-	// + "' AND Competicion LIKE '%" + competicion + "%')");
-
-	private static boolean updateJornada() {
-		try {
-			Class.forName("org.sqlite.JDBC");
-			java.sql.Connection conn = DriverManager
-					.getConnection("jdbc:sqlite:production.sqlite");
-			Statement stat = conn.createStatement();
-			// if every thing is OK rs should be 0
-			int rs = stat
-					.executeUpdate("UPDATE CALENDARIOS  SET Jornada = 'Jornada+1' WHERE jornada LIKE '[0-9]*' ");
-
-			conn.close();
-			stat.close();
-			System.out.println("FIN");
-			return true;
-
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
+		// 1TF
+		GetDatosLigaTenerife(new URL("http://origencanario.com/primera-categoria-2/"));
+		// 3TF
+		 GetDatosLigaTenerife(new
+		 URL("http://origencanario.com/tercera-categoria-2012/"));
 
 	}
 
-	private static void getDatosInterInsuLZFV(URL url, String grupo) throws IOException {
-		Document doc = Jsoup.connect(url.toString()).timeout(0).get();
-		Elements tables = doc.select("table");
-		if (grupo.matches("A")) {
-			Element table = tables.get(0);
-			System.out.println("table 1" + table.text());
-			updateGrupo(table, grupo);
-		} else if (grupo.matches("B")) {
-			Element table = tables.get(1);
-			System.out.println("table 2" + table.text());
-			updateGrupo(table, grupo);
-		} else if (grupo.matches("F")) {
-			Element table = tables.get(2);
-			System.out.println("table 3" + table.text());
-			updateGrupo(table, grupo);
-		}
-
-	}
-
-	private static void updateGrupo(Element table, String grupo) {
-		Elements allBlocks = table.select("td");
-		Calendar today = Calendar.getInstance();
-		today.set(Calendar.HOUR_OF_DAY, 0);
-		int count = 0;
-		int i = 0;
-		String ultimaJornada = "1";
-		for (Element e : allBlocks) {
-			// System.out.print(" => " + e.text()); // <---------------------
-			if (e.text().toString().matches(".*Jornada.*")) {
-				ultimaJornada = e.text().toString();
-				// System.out.println("última Jornada");
-				i++;
-			}
-		}
-		String line = "";
-		String[] allBlocksArray = new String[i + 1];
-		i = 0;
-		for (Element e : allBlocks) {
-			// System.out.print(" B=> " + e.text()); // <---------------------
-			if (e.text().toString().matches(".*Jornada.*")) {
-				count = 0;
-				i++;
-			}
-			if (!(e.text().toString().matches("") || e.toString().matches("<td></td>"))) {
-				line = allBlocksArray[i];
-				allBlocksArray[i] = line + ";" + e.text().toString();
-				count++;
-			}
-
-		}
-		int jornadaActual = GetJornadaActual(allBlocksArray);
-
-	}
-
-	private static int GetJornadaActual(String[] allBlocksArray) {
-		int jornadaInt;
-		String jornadaActual = "0";
-		int i;
-		for (i = 0; i < allBlocksArray.length; i++) {
-			if (allBlocksArray[i].split(";").length == 20) {
-				String[] line2 = allBlocksArray[i].split(";");
-				jornadaActual = line2[1].toString();
-			}
-
-		}
-		// System.out.println("jornada actual = " + jornadaActual);
-		String[] datos = jornadaActual.split(" ");
-		return Integer.parseInt(datos[1]);
-
-	}
-
-	private static void GetDatosLigaTenerife(URL url) throws IOException,
+	
+		private static void GetDatosLigaTenerife(URL url) throws IOException,
 			ClassNotFoundException, SQLException {
 		Document doc = Jsoup.connect(url.toString()).timeout(0).get();
 		System.out.println("\n Origen Canario => " + doc.title());
